@@ -1,13 +1,372 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;700;900&display=swap');
+
+:root {
+  --primary-color: #0aefff; /* Neon Blue */
+  --secondary-color: #00ff7f; /* Spring Green */
+  --background-dark: #0d0c1d; /* Deep Space Blue */
+  --background-light: #16152d;
+  --text-color: #dbe2fb;
+  --text-muted: #8c8d9e;
+  --font-family: 'Exo 2', sans-serif;
+  --max-width: 1100px;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* Add a cool background image with a parallax effect */
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--background-dark);
+  color: var(--text-color);
+  background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+  background-attachment: fixed; /* This creates the parallax effect */
+  overflow-x: hidden;
+}
+
+/* General Styles */
+h1, h2, h3 {
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+h1 { font-size: 4rem; font-weight: 900; color: #fff; }
+p { color: var(--text-muted); line-height: 1.8; font-size: 1.1rem; }
+
+/* Reusable Button Styles */
+.btn {
+  border: none;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  color: var(--background-dark);
+  box-shadow: 0 0 15px var(--primary-color);
+}
+.btn-primary:hover {
+  transform: scale(1.05) translateY(-5px);
+  box-shadow: 0 0 25px var(--primary-color);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+}
+.btn-secondary:hover {
+  background: var(--primary-color);
+  color: var(--background-dark);
+  transform: scale(1.05) translateY(-5px);
+}
+
+/* Header */
+.header {
+  background: rgba(13, 12, 29, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 1rem 5%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: auto;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header-logo { font-size: 2rem; font-weight: 900; color: var(--primary-color); display: flex; align-items: center; gap: 10px; }
+.header-nav a { margin: 0 1rem; font-size: 1.1rem; color: var(--text-color); cursor: pointer; transition: color 0.3s ease; padding-bottom: 5px; border-bottom: 2px solid transparent; }
+.header-nav a:hover, .header-nav a.active { color: var(--primary-color); border-bottom: 2px solid var(--primary-color); }
+
+/* Keyframes for animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Section Wrapper */
+.section {
+  padding: 8rem 5%;
+  display: flex;
+  justify-content: center; /* Center the content wrapper horizontally */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.section:last-of-type { border-bottom: none; }
+
+.section-content-wrapper {
+  max-width: var(--max-width);
+  width: 100%;
+  text-align: center; /* Center text for section titles */
+}
+
+/* Hero Section */
+.hero-section {
+  min-height: 100vh; /* Make hero section full height */
+  display: flex;
+  align-items: center; /* Vertically center content */
+}
+.hero-rocket {
+  font-size: 5rem;
+  color: var(--primary-color);
+  margin-bottom: 2rem;
+  animation: float 4s ease-in-out infinite; /* Floating animation */
+}
+.hero-section h1 {
+  background: -webkit-linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero-section p { font-size: 1.5rem; max-width: 700px; margin: 1.5rem auto 2.5rem auto; }
+.hero-buttons { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
+
+/* Section Title (moved text-align to wrapper) */
+.section-title h2 { font-size: 3rem; margin-bottom: 1rem; position: relative; display: inline-block; padding-bottom: 0.5rem; }
+.section-title h2::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 60px; height: 4px; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); border-radius: 2px; }
+.section-title p { max-width: 700px; margin: 0 auto 4rem auto; }
+
+/* Card Component */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+.card { background-color: var(--background-light); padding: 2.5rem 2rem; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; }
+.card-icon { font-size: 4rem; color: var(--primary-color); margin-bottom: 1.5rem; }
+.card h3 { font-size: 1.5rem; margin-bottom: 1rem; color: #fff; }
+
+/* Pricing Section */
+.pricing-card-features { list-style: none; padding: 0; margin: 2rem 0; }
+.pricing-card-features li { margin-bottom: 1rem; color: var(--text-muted); }
+.pricing-card-features li svg { color: var(--secondary-color); margin-right: 10px; }
+
+/* Contact Section */
+.contact-form { display: flex; flex-direction: column; gap: 1.5rem; width: 100%; max-width: 600px; margin: 0 auto; }
+.contact-form input, .contact-form textarea { padding: 1rem; background-color: var(--background-light); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: var(--text-color); font-size: 1rem; }
+
+/* Footer */
+.footer { padding: 2rem 5%; text-align: center; background-color: var(--background-light); }
+.footer-socials { margin-bottom: 1rem; }
+.footer-socials a { color: var(--text-muted); font-size: 1.8rem; margin: 0 1rem; transition: color 0.3s ease; }
+.footer-socials a:hover { color: var(--primary-color); }
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  h1 { font-size: 3rem; }
+  .section-title h2 { font-size: 2.5rem; }
+  .hero-section p { font-size: 1.2rem; }
+  .section { padding: 6rem 5%; }
+  .header { flex-direction: column; padding: 0.5rem 5%; }
+  .header-nav { margin-top: 0.5rem; }
+  .header-nav a { margin: 0 0.5rem; font-size: 1rem; }
+}
+@media (max-width: 480px) {
+  h1 { font-size: 2.5rem; }
+  .section-title h2 { font-size: 2rem; }
+  .hero-section p { font-size: 1rem; }
+  .header-nav { flex-wrap: wrap; justify-content: center; }
+  .card-grid { grid-template-columns: 1fr; }
+}/* New Section Header Layout */
+.section-header {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr; /* Left column is smaller than the right */
+  align-items: center;
+  gap: 3rem;
+  width: 100%;
+  margin-bottom: 4rem;
+  text-align: left;
+}
+
+.section-header-title h2 {
+  font-size: 3rem;
+  margin: 0;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.5rem;
+}
+
+.section-header-title h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0; /* Align underline to the left */
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  border-radius: 2px;
+}
+
+.section-header-subtitle p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-muted); /* Uses the existing muted color */
+  border-left: 3px solid var(--primary-color);
+  padding-left: 1.5rem;
+}
+
+
+/* =================================== */
+/* == RESPONSIVE DESIGN ADJUSTMENTS == */
+/* =================================== */
+
+/* Add this inside the Tablet media query */
+@media (max-width: 768px) {
+  /* ... existing tablet styles ... */
+
+  .section-header {
+    grid-template-columns: 1fr; /* Stack columns on tablets */
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .section-header-title h2::after {
+    left: 50%; /* Re-center the underline */
+    transform: translateX(-50%);
+  }
+
+  .section-header-subtitle p {
+    border-left: none;
+    padding-left: 0;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+/* ... keep all existing CSS ... */
+
+/* Add these new styles before the media queries */
+.see-more-container {
+    width: 100%;
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.care-plan-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+    text-align: left;
+    margin-top: 2rem;
+}
+
+.care-plan-item {
+    background-color: var(--background-light);
+    padding: 1.5rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.1rem;
+}
+
+.care-plan-item svg {
+    color: var(--secondary-color);
+    font-size: 1.5rem;
+    flex-shrink: 0; /* Prevents icon from shrinking */
+}
+
+/* ... keep existing media queries ... */
+
+/* ... in src/index.css ... */
+
+/* New Pricing Card Detail Styles */
+.price-details {
+  margin: 1.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem 0;
+}
+
+.price-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.price-item:last-child {
+  margin-bottom: 0;
+}
+
+.price-label {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+.price-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.logo-btn {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--primary-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.logo-btn:hover {
+  color: var(--secondary-color);
+}
+/* ... keep all your existing CSS ... */
+
+/* Portfolio Card Styles */
+.portfolio-card-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Makes cards in the same row equal height */
+}
+
+.portfolio-card-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+.tech-tag {
+  background-color: rgba(10, 239, 255, 0.1); /* Use primary color with low opacity */
+  color: var(--primary-color);
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* This makes sure the card content fills the space and pushes the button to the bottom */
+.portfolio-card-content p {
+  flex-grow: 1; 
+}
+
+/* Update .btn style to support icons */
+.btn {
+  /* ... keep existing btn styles ... */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem; /* Adds space between text and icon */
+  justify-content: center;
+}
+
+/* ... in src/index.css, you can add this near the bottom ... */
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+.submit-button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
