@@ -7,6 +7,7 @@ import Testimonials from '../components/sections/Testimonials';
 import Contact from '../components/sections/Contact';
 import PricingPreview from '../components/sections/PricingPreviews';
 
+
 const HomePage = () => {
   return (
     <>

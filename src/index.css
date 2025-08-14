@@ -370,3 +370,13 @@ p { color: var(--text-muted); line-height: 1.8; font-size: 1.1rem; }
   justify-content: center;
   gap: 10px;
 }
+/* add to your global CSS */
+.schedule-btn {
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+.schedule-btn:hover { background: #1d4ed8; }

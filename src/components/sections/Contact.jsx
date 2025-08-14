@@ -75,16 +75,43 @@ const Contact = () => {
 
   // 1. Create a variable to check if all form fields are filled.
   //    The .trim() removes whitespace to ensure the user can't just enter spaces.
+  
+
+  const bookingUrl = "https://calendar.app.google/pjUeHm81XViJKMqFA";
+
+  const openBooking = () => {
+    window.open(bookingUrl, "_blank", "noopener,noreferrer");
+  };
+
+  // 1. Create a variable to check if all form fields are filled.
+  //    The .trim() removes whitespace to ensure the user can't just enter spaces.
   const isFormValid = formData.name.trim() && formData.email.trim() && formData.message.trim();
 
   return (
     <Section id="contact">
-      <div className="section-header">
+       <div className="section-header">
+       <div className="section-header-title">
+          <h2>Book a luanch time with us </h2>
+          </div>
+          <div className="section-header-subtitle">
+          <p>Ready to learn more about your site? Book a time with us, and let's chart the course for your new website.</p>
+        </div>
+        </div>
+          <button
+      type="button"
+      onClick={openBooking}
+      className={"btn btn-primary" || "schedule-btn"}
+      aria-label={"Book a time"}
+    >
+      {"Book a time"}
+    </button>
+
+   <div className="section-header">
         <div className="section-header-title">
           <h2>Get Started on Your Mission</h2>
         </div>
         <div className="section-header-subtitle">
-          <p>Ready to launch? Send us a message, and let's chart the course for your new website.</p>
+          <p>Not ready to launch and want more information? Send us a message, and let's chart the course for your new website.</p>
         </div>
       </div>
 

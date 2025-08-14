@@ -45,7 +45,13 @@ const Portfolio = () => {
     {
       title: "Construction Company Mockup",
       description: "A professional construction company website mockup showcasing services, portfolio, and company information with modern design principles.",
-      url: "https://jmblanco22.github.io/constructionMockup/",
+      url: "https://jmblanco22.github.io/solidbuild-site/",
+      technologies: ["TypeScript", "React", "HTML", "CSS", "Responsive Design"]
+    },
+    {
+      title: "Lawyer Website Mockup",
+      description: "A sleek lawyer company website mockup showcasing Resources, practice areas, and company information",
+      url: "https://https://jmblanco22.github.io/Lawyer-Website/",
       technologies: ["React", "HTML", "CSS", "Responsive Design"]
     }
   ];
