@@ -51,7 +51,7 @@ const Portfolio = () => {
     {
       title: "Lawyer Website Mockup",
       description: "A sleek lawyer company website mockup showcasing Resources, practice areas, and company information",
-      url: "https://https://jmblanco22.github.io/Lawyer-Website/",
+      url: "https://jmblanco22.github.io/Lawyer-Website/",
       technologies: ["React", "HTML", "CSS", "Responsive Design"]
     }
   ];
