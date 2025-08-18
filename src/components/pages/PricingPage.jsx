@@ -8,8 +8,8 @@ import { motion } from 'framer-motion';
 const fullPlans = [
   {
     name: 'Starter Package',
-    fee: '$500',
-    monthly: '$70 / month',
+    fee: '$400',
+    monthly: '$50 / month',
     features: [
       'Up to 5 Pages',
       'Mobile Responsive Design',
@@ -20,8 +20,8 @@ const fullPlans = [
   },
   {
     name: 'Business Growth',
-    fee: '$700',
-    monthly: '$100 / month',
+    fee: '$600',
+    monthly: '$70 / month',
     features: [
       'Up to 10 Pages',
       'Mobile Responsive Design',
@@ -33,8 +33,8 @@ const fullPlans = [
   },
   {
     name: 'Pro Scale',
-    fee: '$900',
-    monthly: '$200 / month',
+    fee: '$800',
+    monthly: '$100 / month',
     features: [
       'Up to 15 Pages',
       'Mobile Responsive Design',

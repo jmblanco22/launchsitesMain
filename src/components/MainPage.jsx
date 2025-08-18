@@ -11,13 +11,13 @@ import PricingPreview from '../components/sections/PricingPreviews';
 const HomePage = () => {
   return (
     <>
-      <HeroSection />
-      <WhatWeDo />
-      <WhyChooseUs />
-      <Portfolio />
-      <PricingPreview />
-      <Testimonials />
-      <Contact />
+      <section id="herosection"><HeroSection /></section>
+      <section id="services"><WhatWeDo /></section>
+      <section id="features"><WhyChooseUs /></section>
+      <section id="portfolio"><Portfolio /></section>
+      <section id="pricing"><PricingPreview /></section>
+      <section id="testimonials"><Testimonials /></section>
+      <section id="contact"><Contact /></section>
     </>
   );
 };

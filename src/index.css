@@ -82,8 +82,32 @@ p { color: var(--text-muted); line-height: 1.8; font-size: 1.1rem; }
   align-items: center;
 }
 .header-logo { font-size: 2rem; font-weight: 900; color: var(--primary-color); display: flex; align-items: center; gap: 10px; }
-.header-nav a { margin: 0 1rem; font-size: 1.1rem; color: var(--text-color); cursor: pointer; transition: color 0.3s ease; padding-bottom: 5px; border-bottom: 2px solid transparent; }
-.header-nav a:hover, .header-nav a.active { color: var(--primary-color); border-bottom: 2px solid var(--primary-color); }
+.header-nav a { 
+  margin: 0 1rem; 
+  font-size: 1.1rem; 
+  color: var(--text-color); 
+  cursor: pointer; 
+  transition: color 0.3s ease; 
+  padding-bottom: 5px; 
+  border-bottom: 2px solid transparent; 
+}
+.header-nav a:hover, .header-nav a.active { 
+  color: var(--primary-color); 
+  border-bottom: 2px solid var(--primary-color); 
+}
+/* kill underlines in the header nav */
+.header .header-nav a,
+.header .header-nav a:link,
+.header .header-nav a:visited {
+  text-decoration: none !important;
+  border-bottom: 0 !important; /* in case any old border rule lingers */
+}
+.header .header-nav a:hover,
+.header .header-nav a:focus {
+  text-decoration: none !important;
+}
+
+
 
 /* Keyframes for animations */
 @keyframes float {
@@ -380,3 +404,8 @@ p { color: var(--text-muted); line-height: 1.8; font-size: 1.1rem; }
   cursor: pointer;
 }
 .schedule-btn:hover { background: #1d4ed8; }
+
+html {
+  scroll-behavior: smooth;
+}
+
