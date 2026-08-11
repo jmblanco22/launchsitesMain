@@ -4,7 +4,7 @@
 
 ---
 
-> **Note on placeholders:** Anywhere you see `[INSERT ...]`, that's a spot for you to drop in a code sample, a screenshot, or a diagram. I've written a description of exactly what goes there. Code blocks that are already filled in are pulled from the real project — verify them against your current files before submitting, since a few may have drifted.
+> **Note on placeholders:** Anywhere you see `[INSERT ...]`, that's a spot for you to drop in a code sample, a screenshot, or a diagram. I've written a description of exactly what goes there. Code blocks that are already filled in are pulled from the real project verify them against your current files before submitting, since a few may have drifted.
 
 ---
 
@@ -12,13 +12,13 @@
 
 *Audience: everyone. Job: introduce the project to a reader who has never seen it, and hook them with the central realization.*
 
-StudySpark is a mobile-first web app that turns any topic into a personalized course. You type what you want to learn — "basic derivatives," "how to swing a golf club," "who was Nikola Tesla" — and StudySpark generates a roadmap of ordered modules, writes a micro-lecture for every submodule, quizzes you on what you just read, and tracks your progress against other learners on a leaderboard. Every piece of educational content is generated on demand by a large language model.
+StudySpark is a mobile-first web app that turns any topic into a personalized course. You type what you want to learn  "basic derivatives," "how to swing a golf club," "who was Nikola Tesla" and StudySpark generates a roadmap of ordered modules, writes a micro-lecture for every submodule, quizzes you on what you just read, and tracks your progress against other learners on a leaderboard. Every piece of educational content is generated on demand by a large language model.
 
-The project began as user research, not code. My team interviewed six undergraduates about how they study, and the same thing kept surfacing: it's not that students don't want to learn — it's that studying feels like one big, overwhelming, ambiguous task. Four findings shaped everything that followed: big tasks kill motivation, learning feels passive, visible progress builds momentum, and structure affects retention. StudySpark is an attempt to answer each of those with a feature.
+The project began as user research, not code. My team interviewed six undergraduates about how they study, and the same thing kept surfacing: it's not that students don't want to learn it's that studying feels like one big, overwhelming, ambiguous task. Four findings shaped everything that followed: big tasks kill motivation, learning feels passive, visible progress builds momentum, and structure affects retention. StudySpark is an attempt to answer each of those with a feature.
 
 When I started building, I thought the AI part was simple. You want the model to teach something, so you write a good prompt asking it to teach that thing. Prompt in, lecture out. I spent the first weeks learning how wrong that is.
 
-Reliably generating educational content from an LLM is almost never a single prompt. It's *multiple* prompts. It's deciding what order those prompts run in, and what information each one is allowed to see. It's choosing what to make explicit versus what to leave for the model to infer. And sometimes it's not even a prompt at all — sometimes you have to invent a little intermediate syntax that hands off from the LLM to an ordinary, non-AI search. The interesting work of building an AI product turned out to live in the *architecture around* the prompts, far more than in the wording of any one of them.
+Reliably generating educational content from an LLM is almost never a single prompt. It's *multiple* prompts. It's deciding what order those prompts run in, and what information each one is allowed to see. It's choosing what to make explicit versus what to leave for the model to infer. And sometimes it's not even a prompt at all sometimes you have to invent a little intermediate syntax that hands off from the LLM to an ordinary, non-AI search. The interesting work of building an AI product turned out to live in the *architecture around* the prompts, far more than in the wording of any one of them.
 
 This report is about that architecture. It covers how StudySpark actually generates a micro-lecture, the specific things I got wrong and how I fixed them, and the general principles I'd hand to anyone building something similar.
 
@@ -33,7 +33,7 @@ This report is about that architecture. It covers how StudySpark actually genera
 | Framework | **Next.js 16** (App Router, TypeScript) | API routes and pages in one codebase; server-side rendering for the parts that need it |
 | Database & Auth | **Supabase** (Postgres + magic-link auth) | Row-level security out of the box, so a user can only ever read their own data |
 | LLM gateway | **OpenRouter** → DeepSeek V4 Flash | One API key for many models; you swap models by changing a single string |
-| AI SDK | **Vercel AI SDK** (`generateObject`, `generateText`) | Structured-output enforcement — this is load-bearing, see §4 |
+| AI SDK | **Vercel AI SDK** (`generateObject`, `generateText`) | Structured-output enforcement this is load-bearing, see §4 |
 | Validation | **Zod** | Defines the exact shape the model must return, and validates it |
 | Images | **Unsplash API** | Free stock photos, fetched server-side |
 | Math & tables | **remark-math + rehype-katex + KaTeX**, **remark-gfm** | Renders LaTeX formulas and markdown tables inside lectures |
@@ -41,7 +41,7 @@ This report is about that architecture. It covers how StudySpark actually genera
 
 Two stack choices are worth flagging for a process reader, because they weren't obvious going in.
 
-First, **all AI runs server-side, in API routes, never in the browser.** This isn't a performance decision — it's a secrets decision. The API key that pays for model calls can never touch the client, or anyone could read it and spend your money. Every generation route lives behind the server boundary.
+First, **all AI runs server-side, in API routes, never in the browser.** This isn't a performance decision, it's a secrets decision. The API key that pays for model calls can never touch the client, or anyone could read it and spend your money. Every generation route lives behind the server boundary.
 
 Second, **the model provider is deliberately abstracted behind OpenRouter.** DeepSeek V4 Flash is cheap and good enough for lectures, but the day it isn't, switching to a different model is a one-line change instead of a rewrite. If you're evaluating whether to build this way, that abstraction is the first thing worth looking up.
 
@@ -49,11 +49,11 @@ Second, **the model provider is deliberately abstracted behind OpenRouter.** Dee
 
 ## 3. How StudySpark Generates a Micro-Lecture
 
-*Audience: coders who want to implement this, and process managers who want to understand the shape of the pipeline. Job: show the actual mechanism — not that I did something clever, but how to do it.*
+*Audience: coders who want to implement this, and process managers who want to understand the shape of the pipeline. Job: show the actual mechanism not that I did something clever, but how to do it.*
 
 Generating a single micro-lecture is not one model call. It's a pipeline of three stages, and each stage's output constrains the next. The most important design decisions are about *where* in that pipeline each decision gets made.
 
-**[INSERT DIAGRAM: The micro-lecture pipeline.** A left-to-right flowchart with three main boxes: (1) *Roadmap generation* — inputs "topic," outputs "modules → submodules, each tagged visual/not"; (2) *Lecture generation* — inputs the submodule + the visual flag, outputs "markdown with `[FIGURE: …]` placeholders"; (3) *Figure resolution* — inputs the placeholders, outputs "markdown with real image URLs." Draw a **dotted rectangle around each stage that happens inside a single LLM query context**, so the reader can see what the model sees in one shot versus what's passed forward between stages. Label the arrows between stages with the artifact that travels along them: "roadmap JSON," "lecture markdown + placeholders," "finished markdown." Boxes-and-arrows is fine; it does not need to be pretty.**]**
+**[INSERT DIAGRAM:]**
 
 ### Stage 1 — Roadmap generation, where scope and visual-ness are decided
 
@@ -136,7 +136,7 @@ For any mathematical expressions, use LaTeX syntax: wrap inline math in single d
 signs and standalone equations in double dollar signs. Do NOT use backticks.`
 ```
 
-Notice what the model *emits* for a figure: not an image, but a piece of intermediate syntax — `[FIGURE: search query | caption]`. This is the hand-off point where the LLM stops and something ordinary takes over.
+Notice what the model *emits* for a figure: not an image, but a piece of intermediate syntax `[FIGURE: search query | caption]`. This is the hand-off point where the LLM stops and something ordinary takes over.
 
 ### Stage 3 — Figure resolution, where the LLM hands off to a plain search
 
@@ -170,9 +170,9 @@ useEffect(() => {
 }, [lecture?.content])
 ```
 
-The `/api/image` route itself is a thin wrapper around Unsplash — the point is that **the "AI" figure feature is 80% a plain keyword search.** The model's only job was to decide *where* a figure belongs and *what to search for*; a non-LLM API does the actual fetching.
+The `/api/image` route itself is a thin wrapper around Unsplash the point is that **the "AI" figure feature is 80% a plain keyword search.** The model's only job was to decide *where* a figure belongs and *what to search for*; a non-LLM API does the actual fetching.
 
-This staged design — text now, images later, finished version cached — is also what made lectures fast. Originally the route generated text, then waited on every image, then returned everything; you stared at a spinner through the whole thing. Splitting the slow part off and streaming it in behind the already-visible text hid the wait.
+This staged design text now, images later, finished version cached is also what made lectures fast. Originally the route generated text, then waited on every image, then returned everything; you stared at a spinner through the whole thing. Splitting the slow part off and streaming it in behind the already-visible text hid the wait.
 
 ---
 
