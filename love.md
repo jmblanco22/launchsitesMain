@@ -180,129 +180,22 @@ This staged design — text now, images later, finished version cached — is al
 
 *Audience: coders. Job: make the single most important reliability technique concrete.*
 
-The foundational reliability decision in StudySpark is this: **never ask the model for a data shape and hope it complies — force the shape and validate it.** The Vercel AI SDK's `generateObject` plus a Zod schema does exactly that.
-
-Here is why it matters, shown rather than told. Without enforcement, asking a model to "return JSON with these fields" gets you output like this — technically an *attempt*, but unusable:
-
-**Invalid example 1** — wrapped in a markdown fence with commentary, so `JSON.parse` throws immediately:
-
-```
-[INSERT REAL CAPTURE — approximate shape below]
-Sure! Here's a roadmap for you:
-```json
-{ "topic": "calculus", "modules": [ ... ] }
-```
-Let me know if you'd like me to expand any module!
-```
-
-**Invalid example 2** — valid JSON, but the wrong shape (a field renamed, a required field missing), so your code crashes three screens later when it reaches for `submodules`:
-
-```
-[INSERT REAL CAPTURE — approximate shape below]
-{ "topic": "calculus", "sections": [ { "name": "Limits" } ] }
-```
-
-*(To capture real versions of these, temporarily swap `generateObject` for a plain `generateText` call asking for JSON, and log what comes back a few times. A couple of real failures make this section land.)*
-
-Against that, here is the entire fix — one schema, handed to `generateObject`:
-
-```ts
-const { object } = await generateObject({
-  model: openrouter.chat('deepseek/deepseek-v4-flash'),
-  schema: roadmapSchema,   // the strict shape from §3
-  prompt,
-})
-```
-
-The model's response is now validated against `roadmapSchema` *before your code ever touches it*. If it's malformed, it fails loudly and immediately, at the boundary, instead of quietly poisoning something downstream. The quiz route uses the same technique with harder constraints — `.length(4)` forces exactly four questions with exactly four options each, so the UI can never receive a five-option quiz.
-
-The takeaway for anyone building this: **if the problem is about format, solve it in code with a schema, not in the prompt with polite instructions.** Don't ask the model to be well-behaved. Make well-behaved the only shape it's allowed to return.
-
----
 
 ## 5. The Iterations: Where It Went Wrong
 
 *Audience: process/project people looking to take mistakes off their own to-do list, and impressive people who want to see genuine iteration. Job: show real failure states and the reasoning that fixed them.*
 
-Every hard problem in this project I first tried to fix by writing a better prompt. I mostly lost. The fixes that worked came from changing the structure around the prompt. Here are the four that taught me the most.
-
-### 5.1 — The Mermaid detour (a feature I removed)
-
-For procedural lectures I wanted diagrams, so I had the model emit Mermaid (a text diagram syntax) and rendered it. It produced *valid* Mermaid maybe one time in four. The rest of the time a stray character broke the parser and the page showed an error.
-
-**[INSERT SCREENSHOT: a lecture showing "Syntax error in text" where a diagram should be.** You have this from testing; recreate it by feeding the renderer a slightly malformed Mermaid block if needed.**]**
-
-I tightened the prompt, gave examples, restricted the syntax. The hit rate improved and stayed unreliable. Eventually I cut the feature. The lesson: **some things a model simply isn't reliable enough to do, and no prompt fixes that.** Knowing when to stop tuning and walk away is part of the skill — a feature that works 25% of the time in a live demo is worse than no feature.
-
-### 5.2 — The metaphor problem (the one that taught me the most)
-
-When I added images, physical topics worked great. Then I opened a calculus lecture on L'Hôpital's rule and got a photo of a **balance scale**. The model had reasoned: L'Hôpital's rule resolves *ambiguous* limits, and a balance scale symbolizes ambiguity. Technically photographable. Useless for teaching.
-
-**[INSERT SCREENSHOT: the L'Hôpital's-rule lecture with the balance-scale image.]**
-
-So I added a rule: no abstract concepts, only concrete objects. The next abstract lecture — "the slope of a tangent line" — returned a photo of a **grassy hillside**. A hill has a slope. New loophole.
-
-**[INSERT SCREENSHOT: the tangent-line lecture with the hillside image.]**
-
-I could feel what was happening: I was playing whack-a-mole against a model that *wanted* to illustrate and would always find one more clever substitution. Every rule I wrote, it routed around.
-
-The fix wasn't a better rule — it was realizing I was fighting at the wrong layer. Instead of trying to *catch* bad images after the model decided to make one, I moved the decision **upstream**. Roadmap generation now flags each submodule visual-or-not (§3, Stage 1), and the lecture prompt only mentions figures at all when that flag is true. A model never told figures exist cannot invent a metaphorical one. The entire class of problem vanished.
-
-**[INSERT DIAGRAM: policing the output vs. constraining the input.** Two rows. Top row (the broken approach): *Lecture prompt always mentions figures* → *model invents a metaphor* → *rule tries to catch it* → *loophole* — draw this as a loop that never closes. Bottom row (the fix): *Roadmap decides visual/not* → *lecture prompt only offers figures when visual=true* → *no metaphor possible* — a clean straight line. The visual point is that the decision moved to an earlier box.**]**
-
-### 5.3 — Judge before it generates
-
-The scope problem (§3) is the same shape as the metaphor problem, in miniature. "How do I do addition" became a five-module course because the model generated structure without first assessing how much structure the request deserved. The fix was to insert a *judgment step in front of the generation step* — assess scope, then build to fit — rather than correcting the output afterward. Put a prejudgment before generative material, and you stop a whole category of bad output before it starts.
-
-### 5.4 — Fail invisibly on purpose
-
-AI-generated content will sometimes be broken — a bad diagram, an image search that returns nothing. The question is what the user sees when it happens. My answer, everywhere, became: nothing. A Mermaid diagram that won't parse renders as empty space, not an error. An image search that finds no match drops the figure silently, leaving clean prose instead of a broken-image icon (that's the `urls[i] ? … : ''` branch in the §3 code). The failure still happens; it just isn't *visible*. In a live demo, "one fewer picture" is invisible. "A red error box on screen" is not.
-
-**[INSERT DIAGRAM: evaluate-before-output.** A small pipeline: *generated content* → *validation check* → branch: valid → *show it*; invalid → *show nothing*. The point is that a validation component sits between generation and display, and the failure path leads to silence, not an error.**]**
-
----
-
 ## 6. Principles
 
-*Audience: process people (as reusable rules) and impressive people (as evidence of crystallized thinking). Job: state the general lessons the specific failures add up to.*
-
-Two of these I only found by writing the first draft of this document — they were implicit in the work but I couldn't have stated them cleanly before.
-
-**Trust, but verify.** This old software maxim turns out to unify most of what I learned. *Trust* is §5.2: you can't police the output, so you design constraints into the input and then trust the model to work within them. *Verify* is §5.4: even when you've built the system to be trustworthy, it will sometimes fail, so you always validate the output and handle the failure. And the schema work in §4 sits exactly between the two — it's how you make an output you can trust *and* verify at the same moment.
-
-**Test the pipeline.** Nearly every failure above is really the same story: I thought it would work, I tested it, it didn't, I adjusted, I tested again. The Mermaid detour was test-driven discovery that a feature was unreliable. Judge-before-generate came from testing at the extremes ("how do I do addition") and watching it break. Fail-invisibly came from testing enough to notice a failure case existed. The lesson isn't "write careful prompts" — it's "assume you're wrong about the model's behavior until you've tested the actual pipeline end to end."
-
-**A triage for prompting problems.** When something's wrong with generated output, ask which kind of problem it is:
-- A **format** problem (wrong shape, invalid structure) → fix it with a schema, not words.
-- A **content** problem (right shape, wrong substance) → *this* is where prompt wording earns its keep.
-- A **"the model keeps finding loopholes"** problem → stop writing rules and move the decision upstream, so the model is never offered the choice.
-
-Most of my time went into that third category, and every time I wasted a day on rule-writing before remembering the fix lived somewhere else.
-
----
+*Audience: process people and impressive people. Job: state the general lessons the specific failures add up to.*
 
 ## 7. What I'd Do Differently
 
 *Audience: process people. Job: hand them mistakes to skip.*
 
-- **Deploy and test in the deployed environment from day one, not just locally.** Several of my worst hours came from a green local build that failed in production — usually a missing environment variable or a case where the strict production build (`npm run build`) caught something the lenient dev server let slide. `npm run dev` and `npm run build` are different tools; I should have been running the strict one before every push much earlier.
-- **Decide the "visual or not" style question (constrain input vs. police output) before building the feature, not after three evenings of prompt-patching.** The pattern is general enough that I'd now look for it at the start.
-- **Establish the design system before styling any screen.** I restyled several pages individually before formalizing color tokens, then had to redo them. Tokens first, screens second.
-
----
-
 ## 8. What's Next — StudySpark 2
 
 *Audience: me, and anyone funding a next phase. Job: the concrete to-do list.*
 
-If I had another three months:
-
-- **File uploads.** Let a learner upload their own notes or a syllabus and generate a roadmap from *their* material rather than a topic string. This is the biggest lever on the original research goal.
-- **An AI tutor chat inside every lecture** — "explain this with a real-world analogy" — for the moment the formula clicks but the intuition doesn't.
-- **Step-level visual aids for procedural topics.** Right now a figure illustrates a submodule; the harder, more valuable version matches an image to each *step* of a process. Stock photos can't do this well, so it likely means restructuring lecture generation into explicit steps.
-- **Friends-only leaderboards.** The current board is global; a real social graph (add friends, friend-scoped rankings) would sharpen the "am I studying more than my friends" motivation the research pointed to.
-- **Harder reliability guarantees on generated content** — an automated acceptance check that grades each lecture/quiz against criteria before it's shown, rather than my current manual spot-checks.
-
 ---
 
-*StudySpark was built solo over one summer, from a research prototype to a deployed, working product. The hardest and most transferable part was not writing prompts — it was learning to architect the system around them so the model could be trusted to teach.*
